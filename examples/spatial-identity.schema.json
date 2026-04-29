@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eips.ethereum.org/EIPS/eip-8242/spatial-identity.schema.json",
+  "title": "ERC-8242 Spatial Identity",
+  "description": "Off-chain spatial identity object for on-chain agents following ERC-8242.",
+  "type": "object",
+  "required": ["spatial"],
+  "properties": {
+    "spatial": {
+      "type": "object",
+      "description": "H3 spatial identity declaration. If absent, the agent is treated as execution_preference=global.",
+      "required": ["h3_index", "resolution"],
+      "properties": {
+        "h3_index": {
+          "type": "string",
+          "description": "H3 cell identifier string (e.g. '8928308280fffff'). Must be a valid H3 cell.",
+          "pattern": "^[0-9a-f]{15}$",
+          "examples": ["8928308280fffff", "89283082803ffff"]
+        },
+        "resolution": {
+          "type": "integer",
+          "description": "H3 resolution integer (0=global ~4,250,547 km² to 15=local ~0.9 m²). Recommended: 5 (~252 km²).",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "execution_preference": {
+          "type": "string",
+          "description": "Routing hint for task assignment scope. Consumers MUST treat as non-binding. Default: global.",
+          "enum": ["local", "regional", "global"],
+          "default": "global"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "examples": [
+    {
+      "spatial": {
+        "h3_index": "8928308280fffff",
+        "resolution": 5,
+        "execution_preference": "local"
+      }
+    },
+    {
+      "spatial": {
+        "h3_index": "83285ffffffffff",
+        "resolution": 3,
+        "execution_preference": "regional"
+      }
+    },
+    {
+      "spatial": {
+        "h3_index": "80fffffffffff",
+        "resolution": 0,
+        "execution_preference": "global"
+      }
+    }
+  ]
+}
