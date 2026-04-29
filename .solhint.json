@@ -3,9 +3,9 @@
   "rules": {
     "compiler-version": ["error", "^0.8.20"],
     "no-empty-blocks": "off",
-    "reason-string": ["warn", { "maxLength": 64 }],
-    "custom-errors": "off",
-    "ordering": "warn",
+    "reason-string": "off",
+    "gas-custom-errors": "off",
+    "ordering": "off",
     "named-parameters-mapping": "off"
   }
 }

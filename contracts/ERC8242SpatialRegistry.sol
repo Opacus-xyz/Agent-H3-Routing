@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {IERC8242} from "./interfaces/IERC8242.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 /**
@@ -39,19 +38,6 @@ contract ERC8242SpatialRegistry is IERC8242, ERC165 {
 
     /// @dev Maps agent address to 1-based index in `_registrants` (0 = not registered).
     mapping(address => uint256) private _registrantIndex;
-
-    // ─── ERC-165 ─────────────────────────────────────────────────────────────
-
-    /**
-     * @inheritdoc IERC165
-     */
-    function supportsInterface(bytes4 interfaceId)
-        public view override returns (bool)
-    {
-        return
-            interfaceId == type(IERC8242).interfaceId ||
-            super.supportsInterface(interfaceId);
-    }
 
     // ─── Write Functions ─────────────────────────────────────────────────────
 
@@ -217,6 +203,19 @@ contract ERC8242SpatialRegistry is IERC8242, ERC165 {
         }
 
         return true;
+    }
+
+    // ─── ERC-165 ─────────────────────────────────────────────────────────────
+
+    /**
+     * @notice Returns true when `interfaceId` is `IERC8242` or `IERC165`.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public view override returns (bool)
+    {
+        return
+            interfaceId == type(IERC8242).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     // ─── View helpers ─────────────────────────────────────────────────────────
