@@ -155,38 +155,32 @@ contract ERC8242SpatialRegistry is IERC8242, ERC165 {
         uint256             offset,
         uint256             limit
     ) external view override returns (SpatialRecord[] memory records, uint256 total) {
-        uint256 n          = _registrants.length;
-        bytes  memory pref = bytes(h3Parent);
-        bool   filterSpatial = pref.length > 0;
-        bool   filterPref    = preference != ExecutionPreference.Global;
-        bool   filterRes     = filterSpatial && resolution > 0;
+        bytes memory pref = bytes(h3Parent);
+        uint256 n = _registrants.length;
 
-        // ── First pass: count matching records ───────────────────────────────
+        // ── First pass: count ────────────────────────────────────────────────
         uint256 count = 0;
         for (uint256 i = 0; i < n; ) {
-            SpatialRecord storage rec = _records[_registrants[i]];
-            if (_matches(rec, pref, filterSpatial, resolution, filterRes, preference, filterPref)) {
+            if (_matches(_records[_registrants[i]], pref, resolution, preference)) {
                 unchecked { ++count; }
             }
             unchecked { ++i; }
         }
         total = count;
 
-        // ── Guard pagination inputs ──────────────────────────────────────────
-        if (offset >= count || limit == 0) {
-            return (new SpatialRecord[](0), total);
-        }
-        uint256 available = count - offset;
-        uint256 size      = available < limit ? available : limit;
+        if (offset >= count || limit == 0) return (new SpatialRecord[](0), total);
 
-        // ── Second pass: collect the requested page ──────────────────────────
+        uint256 size = count - offset;
+        if (size > limit) size = limit;
+
+        // ── Second pass: collect page ────────────────────────────────────────
         records = new SpatialRecord[](size);
         uint256 matched = 0;
         uint256 filled  = 0;
 
         for (uint256 i = 0; i < n && filled < size; ) {
             SpatialRecord storage rec = _records[_registrants[i]];
-            if (_matches(rec, pref, filterSpatial, resolution, filterRes, preference, filterPref)) {
+            if (_matches(rec, pref, resolution, preference)) {
                 if (matched >= offset) {
                     records[filled] = rec;
                     unchecked { ++filled; }
@@ -205,19 +199,15 @@ contract ERC8242SpatialRegistry is IERC8242, ERC165 {
     function _matches(
         SpatialRecord storage rec,
         bytes memory           h3Prefix,
-        bool                   filterSpatial,
         uint8                  resolution,
-        bool                   filterRes,
-        ExecutionPreference    preference,
-        bool                   filterPref
+        ExecutionPreference    preference
     ) private view returns (bool) {
         if (rec.agent == address(0)) return false;
 
-        if (filterPref && rec.preference != preference) return false;
+        if (preference != ExecutionPreference.Global && rec.preference != preference) return false;
 
-        if (filterRes && rec.resolution != resolution) return false;
-
-        if (filterSpatial) {
+        if (h3Prefix.length > 0) {
+            if (resolution > 0 && rec.resolution != resolution) return false;
             bytes memory stored = bytes(rec.h3Index);
             if (stored.length < h3Prefix.length) return false;
             for (uint256 k = 0; k < h3Prefix.length; ) {

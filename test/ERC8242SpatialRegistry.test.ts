@@ -28,8 +28,17 @@ describe("ERC8242SpatialRegistry", function () {
 
   describe("ERC-165", function () {
     it("supports IERC8242 interface", async function () {
-      // 4-byte XOR of all IERC8242 selectors
-      const IERC8242_ID = "0x4e6c7ff4";
+      // Compute interfaceId as XOR of all IERC8242 function selectors (mirrors Solidity's type(I).interfaceId)
+      const iface = new ethers.Interface([
+        "function registerSpatial(string,uint8,uint8) external",
+        "function updateSpatial(string,uint8,uint8) external",
+        "function deregisterSpatial() external",
+        "function getSpatial(address) external view returns (tuple(address,string,uint8,uint8,uint64,uint64))",
+        "function discoverAgents(string,uint8,uint8,uint256,uint256) external view returns (tuple(address,string,uint8,uint8,uint64,uint64)[],uint256)",
+      ]);
+      const fns = ["registerSpatial", "updateSpatial", "deregisterSpatial", "getSpatial", "discoverAgents"];
+      const id = fns.reduce((acc, fn) => acc ^ parseInt(iface.getFunction(fn)!.selector, 16), 0);
+      const IERC8242_ID = "0x" + (id >>> 0).toString(16).padStart(8, "0");
       expect(await registry.supportsInterface(IERC8242_ID)).to.equal(true);
     });
 
